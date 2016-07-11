@@ -334,19 +334,19 @@ def parseArgs():
 		help='only update the show with this id')
 	parser_update.set_defaults(func=update)
 
-	# OPTIONS FOR EMAIL NOTIFY
+	# OPTIONS FOR EMAIL NOTIFICATIONS
 
 	parser_notify = subparsers.add_parser('notify',
-		help='Notifies user of new shows')
+		help='Notify user of new episodes')
 	parser_notify.add_argument('-n', '--days', type=int, default=2,
 		help='number of future days to show (default: 2)')
 	parser_notify.add_argument('-d', metavar='YYYY-MM-DD|n', dest='date',
 		default=yesterday.strftime('%Y-%m-%d'),
-		help='only show episodes prior to this date or n days back')
+		help='only include episodes prior to this date or n days back')
 	parser_notify.add_argument('-s', '--show', metavar='id', type=int,
 		help='only notify for the show with this id')
-	parser_notify.add_argument('--dryrun', action='store_true', default=False,
-		help='if given, will not send any emails')
+	parser_notify.add_argument('--dryrun', action='store_true',
+		default=False, help='if given, do not send anything')
 	parser_notify.set_defaults(func=notify)
 
 	# GLOBAL OPTIONS
