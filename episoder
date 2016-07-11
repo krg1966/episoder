@@ -442,7 +442,7 @@ def loadConfig(args):
 	args.email_password = config.get('email_password')
 	args.email_server = config.get('email_server')
 	args.email_port = int(config.get('email_port', 587))
-	args.email_tls = int(config.get('email_port', 1))
+	args.email_tls = int(config.get('email_tls', 1))
 
 	logging.info('Loaded rcfile')
 
