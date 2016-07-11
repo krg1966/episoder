@@ -1,6 +1,6 @@
 # episoder, https://github.com/cockroach/episoder
 #
-# Copyright (C) 2004-2015 Stefan Ott. All rights reserved.
+# Copyright (C) 2004-2016 Stefan Ott. All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,9 @@ from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer
 from sqlalchemy import MetaData, Sequence, Table, Text
 from sqlalchemy import create_engine, or_, and_
 from sqlalchemy.orm import clear_mappers, create_session, mapper, relation
+
+from alembic.migration import MigrationContext
+from alembic.operations import Operations
 
 import logging
 
@@ -67,23 +70,24 @@ class DataStore(object):
 
 	def update(self):
 
-		result = self.meta.select().execute()
 		meta = {}
+		result = self.meta.select().execute()
 
 		for key in result:
 			meta[key[0]] = key[1]
 
-		if not 'schema' in meta:
-			meta['schema'] = '1'
+		schema = int(meta.get('schema', '1'))
 
-		self.logger.debug('Found v%s schema' % meta['schema'])
+		self.logger.debug('Found v%s schema' % schema)
 
-		if meta['schema'] == '-1':
+		if schema == -1:
+
 			self.logger.debug('Automatic schema updates disabled')
 			return
 
-		if meta['schema'] < '4':
-			self.logger.info('Updating database schema')
+		if schema < 3:
+
+			self.logger.info('Updating database schema to v3')
 			self.episodes.drop()
 			self.shows.drop()
 			self._initdb()
@@ -93,6 +97,19 @@ class DataStore(object):
 			insert = self.meta.insert().values(key='schema',
 					value=4)
 			self.conn.execute(insert)
+
+		if schema == 3:
+
+			self.logger.info('Updating database schema to v4')
+
+			ctx = MigrationContext.configure(self.conn)
+			op = Operations(ctx)
+
+			op.add_column('episodes', Column('notified', Date))
+
+			query = self.meta.update().where(self.meta.c.key ==
+						'schema').values(value = 4);
+			self.conn.execute(query)
 
 
 	def _initdb(self):
